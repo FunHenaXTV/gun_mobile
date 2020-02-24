@@ -4,8 +4,8 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="org.test.myapp"
-      android:versionCode="7211"
-      android:versionName="0.1"
+      android:versionCode="721101"
+      android:versionName="1.1"
       android:installLocation="auto">
 
     <supports-screens

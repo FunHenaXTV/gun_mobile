@@ -24,9 +24,13 @@ class PainterWidget(Widget):
         with self.canvas:
             self.length = 100
             self.bullet_exist = 0
+            self.bullet_id = 0
+            self.speed_y = 0
+            self.collision_amount = 0
             Color(1, 0, 0, 1)
             Line(points=[0, height, width, height], width=2)
             Line(points=[0, 0, width, 0], width=2)
+
             self.targets()
             self.gun()
 
@@ -45,11 +49,11 @@ class PainterWidget(Widget):
             self.score = 0
             rand_y = randint(100, 400)
             self.y_target.append(rand_y)
-            rand_r = randint(10, 40)
+            rand_r = randint(40, 100)
             self.r.append(rand_r)
             self.speed = []
             
-            rand_speed = randint(100, 400)/100
+            rand_speed = randint(200, 400)/100
             self.speed.append(rand_speed)
             for i in range(0, 5):
                 while rand_y in self.y_target:
@@ -62,19 +66,19 @@ class PainterWidget(Widget):
                 else:
                     self.r.append(rand_r)
 
+
                 while rand_speed in self.speed:
-                    rand_speed = randint(100, 400)/100
+                    rand_speed = randint(200, 400)/100
                 else:
                     self.speed.append(rand_speed)
 
             for i in range(0, 5):
-                self.targets_ids.append(Ellipse(pos=(width-100, self.y_target[i]), size=(self.r[i], self.r[i])))
-
-            self.move_target_clock = Clock.schedule_interval(self.move_target, 0.00625)
+                self.targets_ids.append(Ellipse(pos=(width-100, (self.y_target[i])), size=(self.r[i], self.r[i])))
+            self.move_target_clock = Clock.schedule_interval(self.move_target, 0.00625/5)
 
     def move_target(self, dt):
         for i in range(0, 5):
-            self.move(self.targets_ids[i], 0, self.speed[i]*1.5)
+            self.move(self.targets_ids[i], 0, int(self.speed[i]*1.5))
             self.collision_target(i)
     
     def collision_target(self, i):
@@ -87,50 +91,53 @@ class PainterWidget(Widget):
 
     def collision_bullet_with_target(self):
         for i in range(0, 5):
-            #print(((self.bullet_id.pos[0]+self.targets_ids[i].pos[0])**2 + (self.bullet_id.pos[1]+self.targets_ids[i].pos[1])**2)**0.5 - self.bullet_id.size[1] - self.r[i])
-            if abs(((self.bullet_id.pos[0]-self.targets_ids[i].pos[0])**2 + (self.bullet_id.pos[1]-self.targets_ids[i].pos[1])**2)**0.5 - self.bullet_id.size[1] - self.r[i]) < 0.5:
-                self.targets_ids[i].pos = [3000, 3000]
+            x = ((self.bullet_id.pos[0]+self.bullet_id.size[0]/2 - self.targets_ids[i].pos[0]-self.targets_ids[i].size[0]/2))**2
+            y = ((self.bullet_id.pos[1]+self.bullet_id.size[0]/2 - self.targets_ids[i].pos[1]-self.targets_ids[i].size[0]/2))**2
+            st = (x + y)**0.5
+            if st <= self.bullet_id.size[0]/2 + self.targets_ids[i].size[0]/2:
+                self.move(self.targets_ids[i], 3000, 3000)
+
+
 
     def bullet(self, x, y):
         Color(random(), random(), random())
-        self.bullet_id = (Ellipse(pos=(x, y), size=(40, 40)))
-        self.speed_x = 1*5
-        if self.tg < 0:
-            self.speed_y = 1*5
-        else:
-            self.speed_y = -1*5
-        self.collision_amount = 0
+        print(self.length)
+        self.bullet_id = (Ellipse(pos=(x, y), size=(40+self.length/5, 40+self.length/5)))
+        self.speed_x = 5
+        self.speed_y = (self.speed_x * -self.tg)
         self.bullet_exist = 1
-        self.move_bullet_clock = Clock.schedule_interval(self.move_bullet, 0.00625)
+        self.move_bullet_clock = Clock.schedule_interval(self.move_bullet, 0.00625/5)
 
 
     def move_bullet(self, dt):
-        self.move(self.bullet_id, self.speed_x, self.speed_y)
+        self.move(self.bullet_id, (self.speed_x), (self.speed_y))
         self.speed_y -= 0.025
-        self.collision_bullet()
-        self.collision_bullet_with_target()
-        
+        try:
+            self.collision_bullet()
+            self.collision_bullet_with_target()
+        except:
+            pass
         if self.collision_amount == 4:
             self.delete_bullet()
 
 
     def collision_bullet(self):
-        if abs(self.bullet_id.pos[0]+self.bullet_id.size[0] - width) < 2*5:
-            self.collision_amount += 1
-            self.speed_x = -self.speed_x
-        elif abs(self.bullet_id.pos[0]-self.bullet_id.size[0]) < 2*5:
+        if abs(self.bullet_id.pos[0]+self.bullet_id.size[0] - width) < 5:
             self.speed_x = -self.speed_x
             self.collision_amount += 1
-        abs(self.bullet_id.pos[1]-self.bullet_id.size[0])
-        if abs(self.bullet_id.pos[1]+self.bullet_id.size[0] - height) < 2*5:
+        elif abs(self.bullet_id.pos[0]) < 5:
+            self.speed_x = -self.speed_x
+            self.collision_amount += 1
+        if abs(self.bullet_id.pos[1]+self.bullet_id.size[0] - height) < 10:
             self.speed_y = -self.speed_y
             self.collision_amount += 1
-        elif abs(self.bullet_id.pos[1]-self.bullet_id.size[0]) < 4*5:
+        elif abs(self.bullet_id.pos[1]) < 20:
             self.speed_y = -self.speed_y
             self.collision_amount += 1
 
+
     def delete_bullet(self):
-        self.canvas.remove(self.bullet_id)
+        self.bullet_id.pos = [6000, 6000]
         self.collision_amount = 0
         self.bullet_exist = 0
         Clock.unschedule(self.move_bullet_clock)
@@ -185,7 +192,7 @@ class PainterWidget(Widget):
         with self.canvas:
             id.pos = (id.pos[0]+x, id.pos[1]+y)
 
-class MyApp(App):
+class GunApp(App):
     def build(self):
         parent = Widget()
         canvas = PainterWidget()
@@ -197,5 +204,5 @@ class MyApp(App):
         return parent
 
 if __name__ == '__main__':
-    MyApp().run()
+    GunApp().run()
 
