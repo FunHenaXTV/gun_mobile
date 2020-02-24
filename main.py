@@ -1,5 +1,7 @@
 from kivy.app import App
 from kivy.uix.widget import Widget
+from kivy.uix.label import Label
+from kivy.uix.button import Button
 from kivy.graphics import (Color, Ellipse, Line)
 from kivy.clock import Clock
 from kivy.config import Config
@@ -27,6 +29,8 @@ class PainterWidget(Widget):
             self.bullet_id = 0
             self.speed_y = 0
             self.collision_amount = 0
+            self.score = 0
+            self.bullet_amount = 0
             Color(1, 0, 0, 1)
             Line(points=[0, height, width, height], width=2)
             Line(points=[0, 0, width, 0], width=2)
@@ -47,7 +51,7 @@ class PainterWidget(Widget):
             self.r = []
             self.targets_ids = []
             self.score = 0
-            rand_y = randint(100, 400)
+            rand_y = randint(height/2, height-200)
             self.y_target.append(rand_y)
             rand_r = randint(40, 100)
             self.r.append(rand_r)
@@ -57,7 +61,7 @@ class PainterWidget(Widget):
             self.speed.append(rand_speed)
             for i in range(0, 5):
                 while rand_y in self.y_target:
-                    rand_y = randint(100, 400)
+                    rand_y = randint(height/2, height-200)
                 else:
                     self.y_target.append(rand_y)
 
@@ -71,6 +75,11 @@ class PainterWidget(Widget):
                     rand_speed = randint(200, 400)/100
                 else:
                     self.speed.append(rand_speed)
+
+
+            for i in range(0, 5):
+                self.speed[i] = 0
+
 
             for i in range(0, 5):
                 self.targets_ids.append(Ellipse(pos=(width-100, (self.y_target[i])), size=(self.r[i], self.r[i])))
@@ -94,9 +103,27 @@ class PainterWidget(Widget):
             x = ((self.bullet_id.pos[0]+self.bullet_id.size[0]/2 - self.targets_ids[i].pos[0]-self.targets_ids[i].size[0]/2))**2
             y = ((self.bullet_id.pos[1]+self.bullet_id.size[0]/2 - self.targets_ids[i].pos[1]-self.targets_ids[i].size[0]/2))**2
             st = (x + y)**0.5
-            if st <= self.bullet_id.size[0]/2 + self.targets_ids[i].size[0]/2:
+            if st <= self.bullet_id.size[0]/2 + self.targets_ids[i].size[0]/2+600:
+                self.score += 1
                 self.move(self.targets_ids[i], 3000, 3000)
+            print(self.score)
+            if self.score >= 5:
+                self.game_over()
+                break
 
+
+    def game_over(self):
+        Clock.unschedule(self.move_bullet_clock)
+        Clock.unschedule(self.move_target_clock)
+        self.bullet_exist = 1
+        for i in self.targets_ids:
+            self.canvas.remove(i)
+        self.canvas.remove(self.bullet_id)
+        del self.targets_ids
+        del self.y_target
+        del self.r
+        del self.speed
+        g.create_label()
 
 
     def bullet(self, x, y):
@@ -107,16 +134,17 @@ class PainterWidget(Widget):
         self.speed_y = (self.speed_x * -self.tg)
         self.bullet_exist = 1
         self.move_bullet_clock = Clock.schedule_interval(self.move_bullet, 0.00625/5)
+        self.bullet_amount += 1
 
 
     def move_bullet(self, dt):
         self.move(self.bullet_id, (self.speed_x), (self.speed_y))
         self.speed_y -= 0.025
-        try:
-            self.collision_bullet()
-            self.collision_bullet_with_target()
-        except:
-            pass
+        #try:
+        self.collision_bullet()
+        self.collision_bullet_with_target()
+        #except:
+        #    pass
         if self.collision_amount == 4:
             self.delete_bullet()
 
@@ -192,17 +220,34 @@ class PainterWidget(Widget):
         with self.canvas:
             id.pos = (id.pos[0]+x, id.pos[1]+y)
 
+        
 class GunApp(App):
     def build(self):
-        parent = Widget()
-        canvas = PainterWidget()
-        parent.add_widget(canvas)
-        canvas.my_init()
+        self.parent = Widget()
+        self.canvas = PainterWidget()
+        self.parent.add_widget(self.canvas)
+        self.canvas.my_init()
+        
 
     
         
-        return parent
+        return self.parent
+
+    def create_label(self):
+        Color(1, 1, 1, 1)
+        self.parent.add_widget(Label(text='You destroyed all targets with '+str(self.canvas.bullet_amount)+' bullets', font_size='25px', pos=[width/2, height/2]))
+        self.parent.add_widget(Label(text='Do you want to restart?', font_size='25px', pos=[width/2, height/2-50]))
+        self.parent.add_widget(Button(text='Yes', font_size='25px', pos=[width/2-50, height/2-100], on_press=self.yes_handler, size=[70, 50]))
+        self.parent.add_widget(Button(text='No', font_size='25px', pos=[width/2+50, height/2-100], on_press=self.no_handler, size=[70, 50]))
+
+    def yes_handler(self, event):
+        print('YES')
+
+    def no_handler(self, event):
+        print('NO')
+
 
 if __name__ == '__main__':
-    GunApp().run()
+    g = GunApp()
+    g.run()
 
