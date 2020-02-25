@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GUN</string>
-    <string name="private_version">1582578447.9673545</string>
+    <string name="private_version">1582644926.6765296</string>
     <string name="presplash_color">#000000</string>
     <string name="urlScheme">kivy</string>
 </resources>

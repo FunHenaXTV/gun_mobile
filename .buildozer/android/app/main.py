@@ -51,7 +51,7 @@ class PainterWidget(Widget):
             self.r = []
             self.targets_ids = []
             self.score = 0
-            rand_y = randint(height/2, height-200)
+            rand_y = randint(200, height-200)
             self.y_target.append(rand_y)
             rand_r = randint(40, 100)
             self.r.append(rand_r)
@@ -61,7 +61,7 @@ class PainterWidget(Widget):
             self.speed.append(rand_speed)
             for i in range(0, 5):
                 while rand_y in self.y_target:
-                    rand_y = randint(height/2, height-200)
+                    rand_y = randint(200, height-200)
                 else:
                     self.y_target.append(rand_y)
 
@@ -75,11 +75,6 @@ class PainterWidget(Widget):
                     rand_speed = randint(200, 400)/100
                 else:
                     self.speed.append(rand_speed)
-
-
-            for i in range(0, 5):
-                self.speed_r = 0
-
 
             for i in range(0, 5):
                 self.targets_ids.append(Ellipse(pos=(width-100, (self.y_target[i])), size=(self.r[i], self.r[i])))
@@ -103,7 +98,7 @@ class PainterWidget(Widget):
             x = ((self.bullet_id.pos[0]+self.bullet_id.size[0]/2 - self.targets_ids[i].pos[0]-self.targets_ids[i].size[0]/2))**2
             y = ((self.bullet_id.pos[1]+self.bullet_id.size[0]/2 - self.targets_ids[i].pos[1]-self.targets_ids[i].size[0]/2))**2
             st = (x + y)**0.5
-            if st <= self.bullet_id.size[0]/2 + self.targets_ids[i].size[0]/2+600:
+            if st <= self.bullet_id.size[0]/2 + self.targets_ids[i].size[0]/2:
                 self.score += 1
                 self.move(self.targets_ids[i], 3000, 3000)
             print(self.score)
@@ -119,6 +114,7 @@ class PainterWidget(Widget):
         for i in self.targets_ids:
             self.canvas.remove(i)
         self.canvas.remove(self.bullet_id)
+        self.canvas.remove(self.gun_id)
         del self.targets_ids
         del self.y_target
         del self.r
@@ -132,6 +128,8 @@ class PainterWidget(Widget):
         self.bullet_id = (Ellipse(pos=(x, y), size=(40+self.length/5, 40+self.length/5)))
         self.speed_x = 5
         self.speed_y = (self.speed_x * -self.tg)
+        if abs(self.speed_y) > 20:
+            self.speed_y = abs(self.speed_y)/self.speed_y*20
         self.bullet_exist = 1
         self.move_bullet_clock = Clock.schedule_interval(self.move_bullet, 0.00625/5)
         self.bullet_amount += 1
@@ -235,10 +233,24 @@ class GunApp(App):
 
     def create_label(self):
         Color(1, 1, 1, 1)
-        self.parent.add_widget(Label(text='You destroyed all targets with '+str(self.canvas.bullet_amount)+' bullets', font_size='25px', pos=[width/2, height/2]))
-        self.parent.add_widget(Label(text='Do you want to restart?', font_size='25px', pos=[width/2, height/2-50]))
-        self.parent.add_widget(Button(text='Yes', font_size='25px', pos=[width/2-50, height/2-100], on_click=self.yes_handler))
-        self.parent.add_widget(Button(text='No', font_size='25px', pos=[width/2+50, height/2-100], on_click=self.yes_handler))
+        self.l1 = (Label(text='You have destroyed all targets with '+str(self.canvas.bullet_amount)+' bullets', font_size='45px', pos=[width/2, height/2]))
+        self.parent.add_widget(self.l1)
+        self.l2 = (Label(text='Do you want to restart?', font_size='45px', pos=[width/2, height/2-50]))
+        self.parent.add_widget(self.l2)
+        self.b1 = (Button(text='Yes', font_size='45px', pos=[width/2-70, height/2-120], on_release=self.yes_handler, size=[70*1.5, 50*1.5]))
+        self.parent.add_widget(self.b1)
+        self.b2 = (Button(text='No', font_size='45px', pos=[width/2+70, height/2-120], on_release=self.no_handler, size=[70*1.5, 50*1.5]))
+        self.parent.add_widget(self.b2)
+
+    def yes_handler(self, event):
+        self.parent.remove_widget(self.l1)
+        self.parent.remove_widget(self.l2)
+        self.parent.remove_widget(self.b1)
+        self.parent.remove_widget(self.b2)
+        self.canvas.my_init()
+
+    def no_handler(self, event):
+        quit()
 
 
 if __name__ == '__main__':
