@@ -28,7 +28,7 @@ source.include_exts = py,png,jpg,kv,atlas
 #source.exclude_patterns = license,images/*/*.jpg
 
 # (str) Application versioning (method 1)
-version = 1.2
+version = 1.3
 
 # (str) Application versioning (method 2)
 # version.regex = __version__ = ['"](.*)['"]
@@ -49,7 +49,7 @@ requirements = python3,kivy
 presplash.filename = %(source.dir)s/load.png
 
 # (str) Icon of the application
-icon.filename = %(source.dir)s/photo.png
+icon.filename = %(source.dir)s/logo.png
 
 # (str) Supported orientation (one of landscape, sensorLandscape, portrait or all)
 orientation = portrait
@@ -93,7 +93,7 @@ fullscreen = 0
 # (int) Minimum API your APK will support.
 #android.minapi = 21
 
-# (int) Android SDK version to use
+# (int) Android SDK to use
 #android.sdk = 20
 
 # (str) Android NDK version to use

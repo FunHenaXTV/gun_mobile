@@ -7,12 +7,12 @@ from kivy.clock import Clock
 from kivy.config import Config
 from random import random, randint
 from time import sleep
+from kivy.core.window import Window
 
 
 
-
-width = 1080
-height = 1728
+width = Window.width
+height = Window.height
 
 Config.set('graphics', 'resizable', '0')
 Config.set('graphics', 'width', str(width))
@@ -31,6 +31,7 @@ class PainterWidget(Widget):
             self.collision_amount = 0
             self.score = 0
             self.bullet_amount = 0
+            self.time_life = 0
             Color(1, 0, 0, 1)
             Line(points=[0, height, width, height], width=2)
             Line(points=[0, 0, width, 0], width=2)
@@ -57,7 +58,11 @@ class PainterWidget(Widget):
             self.r.append(rand_r)
             self.speed = []
             
-            rand_speed = randint(200, 400)/100
+            rand_speed = randint(400, 600)/100
+            k = randint(-2, 1)
+            if k == 0:
+                k = 1
+            rand_speed *= abs(k)/k
             self.speed.append(rand_speed)
             for i in range(0, 5):
                 while rand_y in self.y_target:
@@ -72,7 +77,11 @@ class PainterWidget(Widget):
 
 
                 while rand_speed in self.speed:
-                    rand_speed = randint(200, 400)/100
+                    rand_speed = randint(400, 600)/100
+                    k = randint(-2, 1)
+                    if k == 0:
+                        k = 1
+                    rand_speed *= abs(k)/k
                 else:
                     self.speed.append(rand_speed)
 
@@ -87,10 +96,10 @@ class PainterWidget(Widget):
     
     def collision_target(self, i):
         for i in range(0, 5):
-            if abs(self.targets_ids[i].pos[1]+self.r[i] - height) < 2*2:
+            if abs(self.targets_ids[i].pos[1]+self.r[i] - height) < 2*3:
                 self.speed[i] = -self.speed[i]
 
-            elif abs(self.targets_ids[i].pos[1]-self.r[i]) < 2*2:
+            elif abs(self.targets_ids[i].pos[1]-self.r[i]) < 2*3:
                 self.speed[i] = -self.speed[i]
 
     def collision_bullet_with_target(self):
@@ -101,7 +110,6 @@ class PainterWidget(Widget):
             if st <= self.bullet_id.size[0]/2 + self.targets_ids[i].size[0]/2:
                 self.score += 1
                 self.move(self.targets_ids[i], 3000, 3000)
-            print(self.score)
             if self.score >= 5:
                 self.game_over()
                 break
@@ -126,7 +134,7 @@ class PainterWidget(Widget):
         Color(random(), random(), random())
         print(self.length)
         self.bullet_id = (Ellipse(pos=(x, y), size=(40+self.length/5, 40+self.length/5)))
-        self.speed_x = 5
+        self.speed_x = 7.5
         self.speed_y = (self.speed_x * -self.tg)
         if abs(self.speed_y) > 20:
             self.speed_y = abs(self.speed_y)/self.speed_y*20
@@ -137,13 +145,15 @@ class PainterWidget(Widget):
 
     def move_bullet(self, dt):
         self.move(self.bullet_id, (self.speed_x), (self.speed_y))
-        self.speed_y -= 0.025
+        self.speed_y -= 0.05
         #try:
         self.collision_bullet()
         self.collision_bullet_with_target()
+        self.time_life += 0.00625*3
+        print(self.time_life)
         #except:
         #    pass
-        if self.collision_amount == 4:
+        if self.time_life >= 7:
             self.delete_bullet()
 
 
@@ -165,6 +175,7 @@ class PainterWidget(Widget):
     def delete_bullet(self):
         self.bullet_id.pos = [6000, 6000]
         self.collision_amount = 0
+        self.time_life = 0
         self.bullet_exist = 0
         Clock.unschedule(self.move_bullet_clock)
 
