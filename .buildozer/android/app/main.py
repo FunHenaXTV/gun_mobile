@@ -49,26 +49,46 @@ class PainterWidget(Widget):
         with self.canvas:
             Color(1, 0, 0, 1)
             self.y_target = []
+            self.x_target = []
             self.r = []
             self.targets_ids = []
             self.score = 0
             rand_y = randint(200, height-200)
             self.y_target.append(rand_y)
+            rand_x = randint(200, width-200)
+            self.x_target.append(rand_x)
             rand_r = randint(40, 100)
             self.r.append(rand_r)
-            self.speed = []
+            self.speed_target_y = []
+            self.speed_target_x = []
             
             rand_speed = randint(400, 600)/100
             k = randint(-2, 1)
             if k == 0:
                 k = 1
+            
             rand_speed *= abs(k)/k
-            self.speed.append(rand_speed)
+            
+            self.speed_target_y.append(rand_speed)
+
+            rand_speed = randint(400, 600)/100
+            k = randint(-2, 1)
+            if k == 0:
+                k = 1
+            rand_speed *= abs(k)/k
+
+            self.speed_target_x.append(rand_speed)
+
             for i in range(0, 5):
                 while rand_y in self.y_target:
                     rand_y = randint(200, height-200)
                 else:
                     self.y_target.append(rand_y)
+
+                while rand_x in self.x_target:
+                    rand_x = randint(200, width-200)
+                else:
+                    self.x_target.append(rand_x)
 
                 while rand_r in self.r:
                     rand_r = randint(40, 100)
@@ -76,31 +96,49 @@ class PainterWidget(Widget):
                     self.r.append(rand_r)
 
 
-                while rand_speed in self.speed:
+                while rand_speed in self.speed_target_y:
                     rand_speed = randint(400, 600)/100
                     k = randint(-2, 1)
                     if k == 0:
                         k = 1
                     rand_speed *= abs(k)/k
                 else:
-                    self.speed.append(rand_speed)
+                    self.speed_target_y.append(rand_speed)
+
+                rand_speed = randint(400, 600)/100
+
+                while rand_speed in self.speed_target_x:
+                    rand_speed = randint(400, 600)/100
+                    k = randint(-2, 1)
+                    if k == 0:
+                        k = 1
+                    rand_speed *= abs(k)/k
+                else:
+                    self.speed_target_x.append(rand_speed)
 
             for i in range(0, 5):
-                self.targets_ids.append(Ellipse(pos=(width-100, (self.y_target[i])), size=(self.r[i], self.r[i])))
+                self.targets_ids.append(Ellipse(pos=(self.x_target[i], (self.y_target[i])), size=(self.r[i], self.r[i])))
             self.move_target_clock = Clock.schedule_interval(self.move_target, 0.00625/5)
 
     def move_target(self, dt):
         for i in range(0, 5):
-            self.move(self.targets_ids[i], 0, int(self.speed[i]*1.5))
+            self.move(self.targets_ids[i], int(self.speed_target_x[i]*1.5), int(self.speed_target_y[i]*1.5))
             self.collision_target(i)
     
     def collision_target(self, i):
         for i in range(0, 5):
-            if abs(self.targets_ids[i].pos[1]+self.r[i] - height) < 2*3:
-                self.speed[i] = -self.speed[i]
+            if abs(self.targets_ids[i].pos[1]+self.r[i] - height) < 10:
+                self.speed_target_y[i] = -self.speed_target_y[i]
 
-            elif abs(self.targets_ids[i].pos[1]-self.r[i]) < 2*3:
-                self.speed[i] = -self.speed[i]
+            elif abs(self.targets_ids[i].pos[1]-self.r[i]) < 10:
+                self.speed_target_y[i] = -self.speed_target_y[i]
+
+
+            if abs(self.targets_ids[i].pos[0] + self.r[i] - width) < 10:
+                self.speed_target_x[i] = -self.speed_target_x[i]
+            elif abs(self.targets_ids[i].pos[0] - self.r[i]) < 10:
+                self.speed_target_x[i] = -self.speed_target_x[i]
+
 
     def collision_bullet_with_target(self):
         for i in range(0, 5):
@@ -125,14 +163,15 @@ class PainterWidget(Widget):
         self.canvas.remove(self.gun_id)
         del self.targets_ids
         del self.y_target
+        del self.x_target
         del self.r
-        del self.speed
+        del self.speed_target_x
+        del self.speed_target_y
         g.create_label()
 
 
     def bullet(self, x, y):
         Color(random(), random(), random())
-        print(self.length)
         self.bullet_id = (Ellipse(pos=(x, y), size=(40+self.length/5, 40+self.length/5)))
         self.speed_x = 7.5
         self.speed_y = (self.speed_x * -self.tg)
@@ -150,10 +189,9 @@ class PainterWidget(Widget):
         self.collision_bullet()
         self.collision_bullet_with_target()
         self.time_life += 0.00625*3
-        print(self.time_life)
         #except:
         #    pass
-        if self.time_life >= 7:
+        if self.collision_amount >= 6:
             self.delete_bullet()
 
 
@@ -192,7 +230,10 @@ class PainterWidget(Widget):
         with self.canvas:
             if self.bullet_exist == 0:
                 self.touch = touch
-                tg = (height/2-self.touch.y) / self.touch.x;
+                try:
+                    tg = (height/2-self.touch.y) / self.touch.x;
+                except:
+                    tg = 100
                 x1 = (self.length**2 / (1 + tg**2))**0.5;
                 y1 = tg * x1;
                 self.gun_id.points = [0, height/2, x1, height/2-y1]
@@ -204,7 +245,10 @@ class PainterWidget(Widget):
         with self.canvas:
             if self.bullet_exist == 0:
                 self.touch = touch
-                tg = (height/2-self.touch.y) / self.touch.x;
+                try:
+                    tg = (height/2-self.touch.y) / self.touch.x;
+                except:
+                    tg = 100
                 x1 = (self.length**2 / (1 + tg**2))**0.5;
                 y1 = tg * x1;
                 self.gun_id.points = [0, height/2, x1, height/2-y1]
@@ -213,7 +257,10 @@ class PainterWidget(Widget):
     def on_touch_up(self, touch):
         with self.canvas:
             if self.bullet_exist == 0:
-                tg = (height/2-self.touch.y) / self.touch.x;
+                try:
+                    tg = (height/2-self.touch.y) / self.touch.x;
+                except:
+                    tg = 100
                 x1 = (self.length**2 / (1 + tg**2))**0.5;
                 y1 = tg * x1;
                 self.tg = tg
